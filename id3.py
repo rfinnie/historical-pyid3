@@ -248,6 +248,22 @@ class ID3v2:
         x.deunsynch(flags, data)
         x.import_data(frameid, flags, data)
         return x
+    elif frameid[0] == 'C':
+      if frameid == 'COMM':
+        x = ID3v2CommentFrame()
+        x.deunsynch(flags, data)
+        x.import_data(frameid, flags, data)
+        return x
+      else:
+        pass
+    elif frameid[0] == 'W':
+      if frameid == 'WXXX':
+        x = ID3v2UserURLFrame()
+        x.deunsynch(flags, data)
+        x.import_data(frameid, flags, data)
+        return x
+      else:
+        pass
     x = ID3v2UnknownFrame()
     x.deunsynch(flags, data)
     x.import_data(frameid, flags, data)
@@ -277,6 +293,39 @@ class ID3v2TextInfoFrame(ID3v2Frame):
     self.value = data[1:]
   def dump(self):
     data = self.encoding + self.value
+    oldframesize = bin2byte(bin2synchsafe(dec2bin(len(data), 28)))
+    self.flags[15] = 1
+    self.flags[12] = 1
+    flags = bin2byte(self.flags)
+    data = zlib.compress(data) + oldframesize
+    framesize = bin2byte(bin2synchsafe(dec2bin(len(data), 28)))
+    return self.id + framesize + flags + data
+
+class ID3v2UserURLFrame(ID3v2Frame):
+  def import_data(self, frameid, flags, data):
+    self.id = frameid
+    self.flags = flags
+    self.encoding = data[0]
+    (self.description, self.url) = data[1:].split('\x00', 1)
+  def dump(self):
+    data = self.encoding + self.description + '\x00' + self.url
+    oldframesize = bin2byte(bin2synchsafe(dec2bin(len(data), 28)))
+    self.flags[15] = 1
+    self.flags[12] = 1
+    flags = bin2byte(self.flags)
+    data = zlib.compress(data) + oldframesize
+    framesize = bin2byte(bin2synchsafe(dec2bin(len(data), 28)))
+    return self.id + framesize + flags + data
+
+class ID3v2CommentFrame(ID3v2Frame):
+  def import_data(self, frameid, flags, data):
+    self.id = frameid
+    self.flags = flags
+    self.encoding = data[0]
+    self.language = data[1:4]
+    (self.description, self.comment) = data[4:].split('\x00', 1)
+  def dump(self):
+    data = self.encoding + self.language + self.description + '\x00' + self.url
     oldframesize = bin2byte(bin2synchsafe(dec2bin(len(data), 28)))
     self.flags[15] = 1
     self.flags[12] = 1
