@@ -1,0 +1,17 @@
+001.mp3: Baseline MP3 file
+  Size: 14 bytes
+  Header found at: 0 bytes
+  Length: 0 seconds
+  MPEG 2.5 layer 3
+  8kbit, 0 frames
+  8000Hz Mono
+  CRCs: No
+  Copyrighted: No
+  Original: Yes
+  Emphasis: None
+002.mp3: ID3v1 tag, created by Winamp 2.74
+003.mp3: ID3v1.1 tag, created by Winamp 2.74
+004.mp3: ID3v2 tag, created by Winamp 2.74
+005.mp3: ID3v1 and ID3v2 tag, created by Winamp 2.74
+006.mp3: ID3v1.1 and ID3v2 tag, created by Winamp 2.74
+
