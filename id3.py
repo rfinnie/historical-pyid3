@@ -3,8 +3,6 @@ import ID3v2Frames
 from binfuncs import *
 
 class ID3v1:
-  fh = None
-
   title = ''
   artist = ''
   album = ''
@@ -66,16 +64,12 @@ class ID3v1:
     'Synthpop'
   ]
 
-  def __init__(self, fh):
-    self.fh = fh
-    self.load()
-
-  def load(self):
-    currentpos = self.fh.tell()
-    self.fh.seek(0, 2)
-    if self.fh.tell() > 127:
-      self.fh.seek(-128, 2)
-      id3tag = self.fh.read(128)
+  def load(self, fn):
+    fh = open(fn, 'rb')
+    fh.seek(0, 2)
+    if fh.tell() > 127:
+      fh.seek(-128, 2)
+      id3tag = fh.read(128)
       if id3tag[0:3] == 'TAG':
         self.title = re.sub('\x00+$', '', id3tag[3:33].rstrip())
         self.artist = re.sub('\x00+$', '', id3tag[33:63].rstrip())
@@ -88,9 +82,10 @@ class ID3v1:
           self.comment = re.sub('\x00+$', '', self.comment[0:28].rstrip())
         else:
           self.track = None
-    self.fh.seek(currentpos)
+    fh.close()
 
-  def save(self):
+  def save(self, fn):
+    fh = open(fn, 'rb+')
     self.title = self.title[0:30]
     self.artist = self.artist[0:30]
     self.album = self.album[0:30]
@@ -110,22 +105,19 @@ class ID3v1:
     else:
       id3tag += self.comment + ('\x00' * (30 - len(self.comment)))
     id3tag += chr(self.genre)
-    currentpos = self.fh.tell()
-    self.fh.seek(0, 2)
-    if self.fh.tell() > 127:
-      self.fh.seek(-128, 2)
-      oldid3tag = self.fh.read(3)
+    fh.seek(0, 2)
+    if fh.tell() > 127:
+      fh.seek(-128, 2)
+      oldid3tag = fh.read(3)
       if oldid3tag == 'TAG':
-        currentpos = self.fh.tell()
-        self.fh.seek(-128, 2)
-        self.fh.write(id3tag)
+        fh.seek(-128, 2)
+        fh.write(id3tag)
       else:
-        self.fh.seek(0, 2)
-        self.fh.write(id3tag)
+        fh.seek(0, 2)
+        fh.write(id3tag)
     else:
-      self.fh.write(id3tag)
-    self.fh.seek(currentpos)
-    
+      fh.write(id3tag)
+    fh.close()
 
 class ID3v2:
   version_minor = 0
@@ -172,7 +164,7 @@ class ID3v2:
         break
     fh.close()
 
-  def dump(self, fn):
+  def save(self, fn):
     fh = open(fn, 'rb+')
     fh.seek(3)
     verinfo = fh.read(2)
