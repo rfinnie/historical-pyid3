@@ -1,8 +1,12 @@
+# @(#) $Id$
+__version__ = "$Revision: 1.4 $"
+
 import re, os
 import ID3v2Frames
 from binfuncs import *
 
 class ID3v1:
+  """ID3v1 parsing/writing class"""
   title = ''
   artist = ''
   album = ''
@@ -65,6 +69,12 @@ class ID3v1:
   ]
 
   def load(self, fn):
+    """Load a file and extract ID3v1 data:
+
+    Keyword arguments:
+    fn -- filename to load
+
+    """
     fh = open(fn, 'rb')
     fh.seek(0, 2)
     if fh.tell() > 127:
@@ -85,6 +95,12 @@ class ID3v1:
     fh.close()
 
   def save(self, fn):
+    """Save the current set of ID3v1 data to file:
+
+    Keyword arguments:
+    fn -- filename to save to
+
+    """
     fh = open(fn, 'rb+')
     self.title = self.title[0:30]
     self.artist = self.artist[0:30]
@@ -120,6 +136,7 @@ class ID3v1:
     fh.close()
 
 class ID3v2:
+  """ID3v2 parsing/writing class"""
   version_minor = 0
   version_rev = 0
   tag_size = 0
@@ -132,6 +149,12 @@ class ID3v2:
 
 
   def load(self, fn):
+    """Load a file and extract ID3v2 data:
+
+    Keyword arguments:
+    fn -- filename to load
+
+    """
     fh = open(fn, 'rb')
     fh.seek(3)
     verinfo = fh.read(2)
@@ -165,6 +188,12 @@ class ID3v2:
     fh.close()
 
   def save(self, fn):
+    """Save the current set of ID3v2 data to file:
+
+    Keyword arguments:
+    fn -- filename to save to
+
+    """
     fh = open(fn, 'rb+')
     fh.seek(3)
     verinfo = fh.read(2)

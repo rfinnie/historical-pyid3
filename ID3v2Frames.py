@@ -1,3 +1,6 @@
+# @(#) $Id$
+__version__ = "$Revision: 1.4 $"
+
 import re, zlib
 from binfuncs import *
 
