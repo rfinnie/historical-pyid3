@@ -89,6 +89,15 @@ class TextInfo(ID3v2Frames):
     data = self.encoding + self.value
     return self.assemble_frame(data)
 
+class URL(ID3v2Frames):
+  def import_data(self, frameid, flags, data):
+    (frameid, flags, data) = self.disassemble_frame(frameid, flags, data)
+    self.id = frameid
+    self.url = data
+  def dump(self):
+    data = self.url
+    return self.assemble_frame(data)
+
 class UserURL(ID3v2Frames):
   def import_data(self, frameid, flags, data):
     (frameid, flags, data) = self.disassemble_frame(frameid, flags, data)
@@ -97,6 +106,16 @@ class UserURL(ID3v2Frames):
     (self.description, self.url) = data[1:].split('\x00', 1)
   def dump(self):
     data = self.encoding + self.description + '\x00' + self.url
+    return self.assemble_frame(data)
+
+class UserTextInfo(ID3v2Frames):
+  def import_data(self, frameid, flags, data):
+    (frameid, flags, data) = self.disassemble_frame(frameid, flags, data)
+    self.id = frameid
+    self.encoding = data[0]
+    (self.description, self.value) = data[1:].split('\x00', 1)
+  def dump(self):
+    data = self.encoding + self.description + '\x00' + self.value
     return self.assemble_frame(data)
 
 class Comment(ID3v2Frames):
@@ -117,4 +136,13 @@ class Unknown(ID3v2Frames):
     self.data = data
   def dump(self):
     return self.assemble_frame(self.data)
+
+class MusicCDIdentifier(ID3v2Frames):
+  def import_data(self, frameid, flags, data):
+    (frameid, flags, data) = self.disassemble_frame(frameid, flags, data)
+    self.id = frameid
+    self.toc = data
+  def dump(self):
+    data = self.data
+    return self.assemble_frame(data)
 

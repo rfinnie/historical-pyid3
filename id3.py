@@ -234,28 +234,26 @@ class ID3v2:
     return
 
   def makeframedisplay(self, frameid, flags, data):
+    x = None
     if frameid[0] == 'T':
       if frameid == 'TXXX':
-        pass
+        x = ID3v2Frames.UserTextInfo()
       else:
         x = ID3v2Frames.TextInfo()
-        x.import_data(frameid, flags, data)
-        return x
     elif frameid[0] == 'C':
       if frameid == 'COMM':
         x = ID3v2Frames.Comment()
-        x.import_data(frameid, flags, data)
-        return x
       else:
         pass
     elif frameid[0] == 'W':
       if frameid == 'WXXX':
         x = ID3v2Frames.UserURL()
-        x.import_data(frameid, flags, data)
-        return x
       else:
-        pass
-    x = ID3v2Frames.Unknown()
+        x = ID3v2Frames.URL()
+    elif frameid == 'MCDI':
+      x = ID3v2Frames.MusicCDIdentifier()
+    if x == None:
+      x = ID3v2Frames.Unknown()
     x.import_data(frameid, flags, data)
     return x
 
