@@ -84,8 +84,8 @@ class ID3v2Frames:
     return (frameid, flags, data)
 
 class TextInfo(ID3v2Frames):
-  self.encoding = '\x00'
-  self.value = ''
+  encoding = '\x00'
+  value = ''
 
   def import_data(self, frameid, flags, data):
     (frameid, flags, data) = self.disassemble_frame(frameid, flags, data)
@@ -97,7 +97,7 @@ class TextInfo(ID3v2Frames):
     return self.assemble_frame(data)
 
 class URL(ID3v2Frames):
-  self.url = ''
+  url = ''
 
   def import_data(self, frameid, flags, data):
     (frameid, flags, data) = self.disassemble_frame(frameid, flags, data)
@@ -108,8 +108,8 @@ class URL(ID3v2Frames):
     return self.assemble_frame(data)
 
 class UserURL(ID3v2Frames):
-  self.description = ''
-  self.url = ''
+  description = ''
+  url = ''
 
   def import_data(self, frameid, flags, data):
     (frameid, flags, data) = self.disassemble_frame(frameid, flags, data)
@@ -121,9 +121,9 @@ class UserURL(ID3v2Frames):
     return self.assemble_frame(data)
 
 class UserTextInfo(ID3v2Frames):
-  self.encoding = ''
-  self.description = ''
-  self.value = ''
+  encoding = ''
+  description = ''
+  value = ''
 
   def import_data(self, frameid, flags, data):
     (frameid, flags, data) = self.disassemble_frame(frameid, flags, data)
@@ -135,10 +135,10 @@ class UserTextInfo(ID3v2Frames):
     return self.assemble_frame(data)
 
 class Comment(ID3v2Frames):
-  self.encoding = ''
-  self.language = ''
-  self.description = ''
-  self.comment = ''
+  encoding = ''
+  language = ''
+  description = ''
+  comment = ''
 
   def import_data(self, frameid, flags, data):
     (frameid, flags, data) = self.disassemble_frame(frameid, flags, data)
@@ -151,7 +151,7 @@ class Comment(ID3v2Frames):
     return self.assemble_frame(data)
 
 class Unknown(ID3v2Frames):
-  self.data = ''
+  data = ''
 
   def import_data(self, frameid, flags, data):
     (frameid, flags, data) = self.disassemble_frame(frameid, flags, data)
@@ -161,7 +161,7 @@ class Unknown(ID3v2Frames):
     return self.assemble_frame(self.data)
 
 class MusicCDIdentifier(ID3v2Frames):
-  self.data = ''
+  data = ''
 
   def import_data(self, frameid, flags, data):
     (frameid, flags, data) = self.disassemble_frame(frameid, flags, data)
