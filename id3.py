@@ -1,4 +1,4 @@
-import re
+import re, os
 from binfuncs import *
 
 class ID3v1:
@@ -137,15 +137,11 @@ class ID3v2:
   footer = 0
   frames = []
 
-  fh = None
 
-  def __init__(self, fh):
-    self.fh = fh
-    self.load()
-
-  def load(self):
-    self.fh.seek(3)
-    verinfo = self.fh.read(2)
+  def load(self, fn):
+    fh = open(fn, 'rb')
+    fh.seek(3)
+    verinfo = fh.read(2)
     self.version_minor = ord(verinfo[0])
     self.version_rev = ord(verinfo[1])
     (
@@ -157,24 +153,52 @@ class ID3v2:
       None,
       None,
       None
-    ) = byte2bin(self.fh.read(1), 8)
-    self.tag_size = bin2dec(byte2bin(self.fh.read(4), 7))
+    ) = byte2bin(fh.read(1), 8)
+    self.tag_size = bin2dec(byte2bin(fh.read(4), 7))
     sizeleft = self.tag_size
     while sizeleft > 0:
-      frameid = self.fh.read(4)
+      frameid = fh.read(4)
       if frameid != '\x00\x00\x00\x00':
-        framesize = bin2dec(byte2bin(self.fh.read(4), 7))
-        foo = self.fh.read(2)
+        framesize = bin2dec(byte2bin(fh.read(4), 7))
+        foo = fh.read(2)
         flags = byte2bin(foo, 8)
-        data = self.fh.read(framesize)
+        data = fh.read(framesize)
         sizeleft -= (framesize + 10)
         print "ID %s\nsize %s\nflags %s\n" % (frameid, framesize, flags)
         self.frames.append(self.makeframedisplay(frameid, flags, data))
       else:
         self.padding_size = sizeleft
-        return
+        break
+    fh.close()
 
-  def dump(self):
+  def dump(self, fn):
+    fh = open(fn, 'rb+')
+    fh.seek(3)
+    verinfo = fh.read(2)
+    version_minor = ord(verinfo[0])
+    version_rev = ord(verinfo[1])
+    (
+      unsync,
+      extended,
+      experimental,
+      footer,
+      None,
+      None,
+      None,
+      None
+    ) = byte2bin(fh.read(1), 8)
+    old_tag_size = bin2dec(byte2bin(fh.read(4), 7))
+    self.unsync = 1
+    out = ''
+    for i in self.frames:
+      out += i.dump()
+    if len(out) > old_tag_size:
+      expand_file = 1
+      out += '\x00' * 2048
+    else:
+      expand_file = 0
+      out += '\x00' * (old_tag_size - len(out))
+
     out2 = 'ID3'
     out2 += chr(self.version_minor)
     out2 += chr(self.version_rev)
@@ -188,13 +212,25 @@ class ID3v2:
       0,
       0
     ])
-    out = ''
-    for i in self.frames:
-      out += i.dump()
-    out += '\x00' * self.padding_size
     tagsize = bin2byte(bin2synchsafe(dec2bin(len(out), 28)))
     out2 += tagsize
-    return out2 + out
+
+
+    if expand_file == 1:
+      fh.seek(old_tag_size + 10)
+      fh2 = open(fn + '.temp', 'wb')
+      fh2.write(out2)
+      fh2.write(out)
+      fh2.write(fh.read())
+      fh2.close()
+      fh.close()
+      os.rename(fn + '.temp', fn)
+    else:
+      fh.seek(0)
+      fh.write(out2)
+      fh.write(out)
+      fh.close()
+    return
 
   def makeframedisplay(self, frameid, flags, data):
     print flags
@@ -202,16 +238,33 @@ class ID3v2:
       if frameid == 'TXXX':
         pass
       else:
-        return ID3v2TextInfoFrame(frameid, flags, data)
-    return ID3v2UnknownFrame(frameid, flags, data)
+        x = ID3v2TextInfoFrame()
+        x.deunsynch(flags, data)
+        x.import_data(frameid, flags, data)
+        return x
+    x = ID3v2UnknownFrame()
+    x.deunsynch(flags, data)
+    x.import_data(frameid, flags, data)
+    return x
 
 
 class ID3v2Frame:
-  def unsynch(flags, data):
-    pass
+  def unsynch(self, flags, data):
+    (data, subsmade) = re.subn('\xff', '\xff\x00', data)
+    if(subsmade > 0):
+      flags[14] = 1
+    else:
+      flags[14] = 0
+    return (flags, data)
 
-class ID3v2TextInfoFrame:
-  def __init__(self, frameid, flags, data):
+  def deunsynch(self, flags, data):
+    if flags[14] == 1:
+      data = re.sub('\xff\x00', '\xff', data)
+      flags[14] = 1
+    return (flags, data)
+
+class ID3v2TextInfoFrame(ID3v2Frame):
+  def import_data(self, frameid, flags, data):
     self.id = frameid
     self.flags = flags
     print flags
@@ -224,8 +277,8 @@ class ID3v2TextInfoFrame:
     flags = bin2byte(self.flags)
     return self.id + framesize + flags + data
 
-class ID3v2UnknownFrame:
-  def __init__(self, frameid, flags, data):
+class ID3v2UnknownFrame(ID3v2Frame):
+  def import_data(self, frameid, flags, data):
     self.id = frameid
     self.flags = flags
     self.data = data
