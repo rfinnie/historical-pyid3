@@ -2,11 +2,15 @@ import re, zlib
 from binfuncs import *
 
 class ID3v2Frames:
+  id = ''
   compressed = 0
   dlied = 0
   encrypted = 0
   unsynched = 0
   grouped = 0
+
+  def __repr__(self):
+    return '<ID3v2Frames.%s (%s)>' % (self.__class__.__name__, self.id)
 
   def unsynch(self, flags, data):
     (data, subsmade) = re.subn('\xff', '\xff\x00', data)
@@ -80,6 +84,9 @@ class ID3v2Frames:
     return (frameid, flags, data)
 
 class TextInfo(ID3v2Frames):
+  self.encoding = '\x00'
+  self.value = ''
+
   def import_data(self, frameid, flags, data):
     (frameid, flags, data) = self.disassemble_frame(frameid, flags, data)
     self.id = frameid
@@ -90,6 +97,8 @@ class TextInfo(ID3v2Frames):
     return self.assemble_frame(data)
 
 class URL(ID3v2Frames):
+  self.url = ''
+
   def import_data(self, frameid, flags, data):
     (frameid, flags, data) = self.disassemble_frame(frameid, flags, data)
     self.id = frameid
@@ -99,6 +108,9 @@ class URL(ID3v2Frames):
     return self.assemble_frame(data)
 
 class UserURL(ID3v2Frames):
+  self.description = ''
+  self.url = ''
+
   def import_data(self, frameid, flags, data):
     (frameid, flags, data) = self.disassemble_frame(frameid, flags, data)
     self.id = frameid
@@ -109,6 +121,10 @@ class UserURL(ID3v2Frames):
     return self.assemble_frame(data)
 
 class UserTextInfo(ID3v2Frames):
+  self.encoding = ''
+  self.description = ''
+  self.value = ''
+
   def import_data(self, frameid, flags, data):
     (frameid, flags, data) = self.disassemble_frame(frameid, flags, data)
     self.id = frameid
@@ -119,6 +135,11 @@ class UserTextInfo(ID3v2Frames):
     return self.assemble_frame(data)
 
 class Comment(ID3v2Frames):
+  self.encoding = ''
+  self.language = ''
+  self.description = ''
+  self.comment = ''
+
   def import_data(self, frameid, flags, data):
     (frameid, flags, data) = self.disassemble_frame(frameid, flags, data)
     self.id = frameid
@@ -130,6 +151,8 @@ class Comment(ID3v2Frames):
     return self.assemble_frame(data)
 
 class Unknown(ID3v2Frames):
+  self.data = ''
+
   def import_data(self, frameid, flags, data):
     (frameid, flags, data) = self.disassemble_frame(frameid, flags, data)
     self.id = frameid
@@ -138,6 +161,8 @@ class Unknown(ID3v2Frames):
     return self.assemble_frame(self.data)
 
 class MusicCDIdentifier(ID3v2Frames):
+  self.data = ''
+
   def import_data(self, frameid, flags, data):
     (frameid, flags, data) = self.disassemble_frame(frameid, flags, data)
     self.id = frameid
