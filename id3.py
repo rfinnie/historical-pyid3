@@ -1,4 +1,4 @@
-import re, os
+import re, os, zlib
 from binfuncs import *
 
 class ID3v1:
@@ -233,7 +233,13 @@ class ID3v2:
     return
 
   def makeframedisplay(self, frameid, flags, data):
-    print flags
+    if flags[15] == 1:
+      realdata = len(data) - 4
+      data = data[0:realdata]
+      flags[15] = 0
+    if flags[12] == 1:
+      data = zlib.decompress(data)
+      flags[12] = 0
     if frameid[0] == 'T':
       if frameid == 'TXXX':
         pass
@@ -267,14 +273,16 @@ class ID3v2TextInfoFrame(ID3v2Frame):
   def import_data(self, frameid, flags, data):
     self.id = frameid
     self.flags = flags
-    print flags
-    print repr(bin2byte(flags))
     self.encoding = data[0]
     self.value = data[1:]
   def dump(self):
     data = self.encoding + self.value
-    framesize = bin2byte(bin2synchsafe(dec2bin(len(data), 28)))
+    oldframesize = bin2byte(bin2synchsafe(dec2bin(len(data), 28)))
+    self.flags[15] = 1
+    self.flags[12] = 1
     flags = bin2byte(self.flags)
+    data = zlib.compress(data) + oldframesize
+    framesize = bin2byte(bin2synchsafe(dec2bin(len(data), 28)))
     return self.id + framesize + flags + data
 
 class ID3v2UnknownFrame(ID3v2Frame):
