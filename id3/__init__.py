@@ -1,5 +1,5 @@
-# @(#) $Id$
-__version__ = "$Revision: 1.4 $"
+# @(#) $Id: id3.py,v 1.8 2001/08/11 04:23:35 ryanf Exp $
+__version__ = "$Revision: 1.8 $"
 
 import re, os
 import ID3v2Frames

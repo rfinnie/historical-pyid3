@@ -1,5 +1,5 @@
-# @(#) $Id$
-__version__ = "$Revision: 1.4 $"
+# @(#) $Id: ID3v2Frames.py,v 1.5 2001/08/11 04:23:35 ryanf Exp $
+__version__ = "$Revision: 1.5 $"
 
 import re, zlib
 from binfuncs import *
