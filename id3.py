@@ -1,4 +1,5 @@
-import re, os, zlib
+import re, os
+import ID3v2Frames
 from binfuncs import *
 
 class ID3v1:
@@ -233,114 +234,28 @@ class ID3v2:
     return
 
   def makeframedisplay(self, frameid, flags, data):
-    if flags[15] == 1:
-      realdata = len(data) - 4
-      data = data[0:realdata]
-      flags[15] = 0
-    if flags[12] == 1:
-      data = zlib.decompress(data)
-      flags[12] = 0
     if frameid[0] == 'T':
       if frameid == 'TXXX':
         pass
       else:
-        x = ID3v2TextInfoFrame()
-        x.deunsynch(flags, data)
+        x = ID3v2Frames.TextInfo()
         x.import_data(frameid, flags, data)
         return x
     elif frameid[0] == 'C':
       if frameid == 'COMM':
-        x = ID3v2CommentFrame()
-        x.deunsynch(flags, data)
+        x = ID3v2Frames.Comment()
         x.import_data(frameid, flags, data)
         return x
       else:
         pass
     elif frameid[0] == 'W':
       if frameid == 'WXXX':
-        x = ID3v2UserURLFrame()
-        x.deunsynch(flags, data)
+        x = ID3v2Frames.UserURL()
         x.import_data(frameid, flags, data)
         return x
       else:
         pass
-    x = ID3v2UnknownFrame()
-    x.deunsynch(flags, data)
+    x = ID3v2Frames.Unknown()
     x.import_data(frameid, flags, data)
     return x
-
-
-class ID3v2Frame:
-  def unsynch(self, flags, data):
-    (data, subsmade) = re.subn('\xff', '\xff\x00', data)
-    if(subsmade > 0):
-      flags[14] = 1
-    else:
-      flags[14] = 0
-    return (flags, data)
-
-  def deunsynch(self, flags, data):
-    if flags[14] == 1:
-      data = re.sub('\xff\x00', '\xff', data)
-      flags[14] = 1
-    return (flags, data)
-
-class ID3v2TextInfoFrame(ID3v2Frame):
-  def import_data(self, frameid, flags, data):
-    self.id = frameid
-    self.flags = flags
-    self.encoding = data[0]
-    self.value = data[1:]
-  def dump(self):
-    data = self.encoding + self.value
-    oldframesize = bin2byte(bin2synchsafe(dec2bin(len(data), 28)))
-    self.flags[15] = 1
-    self.flags[12] = 1
-    flags = bin2byte(self.flags)
-    data = zlib.compress(data) + oldframesize
-    framesize = bin2byte(bin2synchsafe(dec2bin(len(data), 28)))
-    return self.id + framesize + flags + data
-
-class ID3v2UserURLFrame(ID3v2Frame):
-  def import_data(self, frameid, flags, data):
-    self.id = frameid
-    self.flags = flags
-    self.encoding = data[0]
-    (self.description, self.url) = data[1:].split('\x00', 1)
-  def dump(self):
-    data = self.encoding + self.description + '\x00' + self.url
-    oldframesize = bin2byte(bin2synchsafe(dec2bin(len(data), 28)))
-    self.flags[15] = 1
-    self.flags[12] = 1
-    flags = bin2byte(self.flags)
-    data = zlib.compress(data) + oldframesize
-    framesize = bin2byte(bin2synchsafe(dec2bin(len(data), 28)))
-    return self.id + framesize + flags + data
-
-class ID3v2CommentFrame(ID3v2Frame):
-  def import_data(self, frameid, flags, data):
-    self.id = frameid
-    self.flags = flags
-    self.encoding = data[0]
-    self.language = data[1:4]
-    (self.description, self.comment) = data[4:].split('\x00', 1)
-  def dump(self):
-    data = self.encoding + self.language + self.description + '\x00' + self.url
-    oldframesize = bin2byte(bin2synchsafe(dec2bin(len(data), 28)))
-    self.flags[15] = 1
-    self.flags[12] = 1
-    flags = bin2byte(self.flags)
-    data = zlib.compress(data) + oldframesize
-    framesize = bin2byte(bin2synchsafe(dec2bin(len(data), 28)))
-    return self.id + framesize + flags + data
-
-class ID3v2UnknownFrame(ID3v2Frame):
-  def import_data(self, frameid, flags, data):
-    self.id = frameid
-    self.flags = flags
-    self.data = data
-  def dump(self):
-    framesize = bin2byte(bin2synchsafe(dec2bin(len(self.data), 28)))
-    flags = bin2byte(self.flags)
-    return self.id + framesize + flags + self.data
 
